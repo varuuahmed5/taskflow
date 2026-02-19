@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { ArrowRight, BarChart3, Zap, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Link, router, usePage } from "@inertiajs/react";
 import { Button, Input } from "@headlessui/react";
-
+import { LuSparkles } from "react-icons/lu";
+import { RxTarget } from "react-icons/rx";
 import AlertError from "@/components/alert-error";
 
 export default function LandingPage() {
@@ -33,7 +34,13 @@ export default function LandingPage() {
   return (
         <div className="flex min-h-screen">
       {/* Left Side */}
-      <div className="hidden md:flex md:w-1/2 relative overflow-hidden bg-gradient-to-t from-blue-400 via-blue-500 to-indigo-800 flex-col justify-center px-12 lg:px-16">
+<div className="hidden md:flex md:w-1/2 relative overflow-hidden
+bg-gradient-to-b from-indigo-600/100 to-blue-500
+flex-col items-center justify-center px-12 lg:px-16">
+
+
+
+
 
         
 <div className="absolute inset-0 pointer-events-none">
@@ -71,38 +78,14 @@ export default function LandingPage() {
           {/* Halkan waa content-ka asalka ah */}
           <div className="flex items-center gap-2.5 mb-10">
             <div className="w-9 h-9 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white" />
-                <rect
-                  x="11"
-                  y="2"
-                  width="7"
-                  height="7"
-                  rx="1.5"
-                  fill="white"
-                  fillOpacity="0.6"
-                />
-                <rect
-                  x="2"
-                  y="11"
-                  width="7"
-                  height="7"
-                  rx="1.5"
-                  fill="white"
-                  fillOpacity="0.6"
-                />
-                <rect
-                  x="11"
-                  y="11"
-                  width="7"
-                  height="7"
-                  rx="1.5"
-                  fill="white"
-                  fillOpacity="0.4"
-                />
+              <svg width="20" height="20" viewBox="0 0 15 15" color="white" fill="none">
+                <LuSparkles />
+                
+                
               </svg>
             </div>
             <span className="text-white font-display text-xl font-bold tracking-tight">
+              
               TaskFlow
             </span>
           </div>
@@ -118,7 +101,7 @@ export default function LandingPage() {
           <div className="flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-4.5 h-4.5 text-white" />
+                <RxTarget className="w-4.5 h-4.5 text-white" />
               </div>
               <span className="text-white text-sm lg:text-base font-medium">
                 Organize tasks by category & priority

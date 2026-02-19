@@ -3,7 +3,8 @@ import { LayoutDashboard, Clock, CheckCircle, AlertTriangle } from "lucide-react
 import { router } from "@inertiajs/react";
 import { IoIosLogOut } from "react-icons/io";
 import { Button } from "@headlessui/react";
-
+import { MdOutlinePlaylistAddCheck } from "react-icons/md";
+import { LuSparkles } from "react-icons/lu";
 
 
 
@@ -108,15 +109,16 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
+          {/* Header */}
+
+
       <div className="max-w-6xl mx-auto px-6">
 
         {/* Header */}
-    {/* Header */}
-<header className="bg-white px-6 py-4 flex justify-between items-center">
-
+<header className="bg-gray-50 px-6 py-4 flex justify-between items-center shadow-sm">
   <h1 className="text-2xl font-bold flex gap-2 items-center text-black">
     <span className="bg-indigo-500 text-white p-2 rounded-md">
-      ✨
+      <LuSparkles />
     </span>
     TaskFlow
   </h1>
@@ -128,13 +130,13 @@ export default function Dashboard() {
 
     <button
       onClick={() => router.visit("/landing")}
-      className="text-gray-500 px-4 py-1 hover:text-black"
+      className="text-gray-500 px-3 py-1 hover:text-black rounded"
+      aria-label="Logout"
     >
-      <IoIosLogOut className="inline-block mr-1" />
+      <IoIosLogOut className="inline-block mr-1 text-lg" />
     </button>
   </div>
 </header>
-
         {/* Greeting */}
         <section className="mb-10 text-black">
           <h2 className="text-3xl font-bold mb-2">
@@ -334,14 +336,14 @@ function StatCard({
 }) {
 
   const styles = {
-    total: "bg-indigo-100 text-indigo-600",
-    progress: "bg-cyan-100 text-cyan-600",
-    done: "bg-purple-100 text-purple-600",
-    urgent: "bg-orange-100 text-orange-600",
+    total: "bg-indigo-600 text-white",
+    progress: "bg-cyan-600 text-white",
+    done: "bg-purple-600 text-white",
+    urgent: "bg-orange-600 text-white",
   };
 
  const icons = {
-  total: <LayoutDashboard size={22} />,
+  total: <MdOutlinePlaylistAddCheck size={22} />,
   progress: <Clock size={22} />,
   done: <CheckCircle size={22} />,
   urgent: <AlertTriangle size={22} />,
