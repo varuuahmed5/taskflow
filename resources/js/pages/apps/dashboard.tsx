@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { LayoutDashboard, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { router } from "@inertiajs/react";
+import { IoIosLogOut } from "react-icons/io";
+import { Button } from "@headlessui/react";
 
 
 
@@ -109,34 +111,34 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-6">
 
         {/* Header */}
-        <header className="flex justify-between items-center mb-10">
-          <h1 className="text-2xl font-bold flex gap-2 items-center text-black">
-            <span className="bg-indigo-500 text-white p-2 rounded-xl shadow">
-              ✨
-            </span>
-            TaskFlow
-          </h1>
+    {/* Header */}
+<header className="bg-white px-6 py-4 flex justify-between items-center">
 
-          <div className="flex items-center gap-4 text-black">
-            <p className="text-gray-600">
-              Hey, <span className="font-semibold">Feriha Ahmed</span>
-            </p>
-<button
-  onClick={() => router.visit("/landing")}
-  className="text-gray-500 border border-gray-300 rounded-md px-5 py-1 hover:text-black"
->
-  Logout
-</button>
+  <h1 className="text-2xl font-bold flex gap-2 items-center text-black">
+    <span className="bg-indigo-500 text-white p-2 rounded-md">
+      ✨
+    </span>
+    TaskFlow
+  </h1>
 
+  <div className="flex items-center gap-4 text-black">
+    <p className="text-gray-600">
+      Hey, <span className="font-semibold">Feriha Ahmed</span>
+    </p>
 
-
-          </div>
-        </header>
+    <button
+      onClick={() => router.visit("/landing")}
+      className="text-gray-500 px-4 py-1 hover:text-black"
+    >
+      <IoIosLogOut className="inline-block mr-1" />
+    </button>
+  </div>
+</header>
 
         {/* Greeting */}
         <section className="mb-10 text-black">
           <h2 className="text-3xl font-bold mb-2">
-            Good afternoon 👋
+            Good Afternoon 👋
           </h2>
           <p className="text-gray-600 mb-6 text-black">
             Here's what's on your plate today.
@@ -262,17 +264,18 @@ export default function Dashboard() {
 
 
           <select
-            value={filterStatus}
-            onChange={(e) =>
-              setFilterStatus(e.target.value as any)
-            }
-            className="px-4 py-3 rounded-xl border border-gray-300"
-          >
-            <option value="All">All Status</option>
-            <option value="To Do">To Do</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Done">Done</option>
-          </select>
+  value={filterStatus}
+  onChange={(e) =>
+    setFilterStatus(e.target.value as any)
+  }
+  className="px-4 py-3 rounded-xl border border-gray-300"
+>
+  <option value="All">All Categories</option>
+  <option value="To Do">To Do</option>
+  <option value="In Progress">In Progress</option>
+  <option value="Done">Done</option>
+</select>
+
 
           <select
             value={filterPriority}
@@ -345,7 +348,18 @@ function StatCard({
 };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+    <div className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition overflow-hidden">
+  
+  {/* Gradient right top */}
+  <div className={`absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-20 ${
+    type === "total"
+      ? "bg-indigo-400"
+      : type === "progress"
+      ? "bg-cyan-400"
+      : type === "done"
+      ? "bg-purple-400"
+      : "bg-orange-400"
+  }`} />
       <div
         className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${styles[type]}`}
       >
@@ -357,6 +371,7 @@ function StatCard({
     </div>
   );
 }
+
 
 /* ---------------- TASK LIST ---------------- */
 
@@ -374,77 +389,88 @@ function TaskList({
   if (tasks.length === 0) {
     return <p className="text-gray-500">No tasks found.</p>;
   }
-  
-  return (
-  <div className="space-y-4">
-    
-    {tasks.map((task) => (
-      <div
-        key={task.id}
-        className="relative bg-white p-5 text-black rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center overflow-hidden"
-      >
-        {/* Status Color Bar */}
-        <div
-          className={`absolute left-0 top-0 h-full w-1 ${
-            task.status === "Done"
-              ? "bg-purple-500"
-              : task.status === "In Progress"
-              ? "bg-cyan-500"
-              : "bg-indigo-500"
-          }`}
-          
-        />
-        
-        {/* Content */}
-        <div className="ml-3">
-          <h3 className="font-semibold text-lg">{task.title}</h3>
-          <p className="text-gray-500 text-sm">{task.description}</p>
 
-          <div className="mt-2 flex gap-2">
-            <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
-              {task.priority}
-            </span>
-            <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">
-              {task.category}
-            </span>
+  return (
+    <div className="space-y-5">
+      {tasks.map((task) => (
+        <div
+          key={task.id}
+          className="relative bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-start hover:shadow-md transition-all duration-200"
+        >
+          {/* Status Color Bar */}
+          <div
+            className={`absolute left-0 top-0 h-full w-1.5 rounded-l-3xl ${
+              task.status === "Done"
+                ? "bg-purple-500"
+                : task.status === "In Progress"
+                ? "bg-cyan-500"
+                : "bg-indigo-500"
+            }`}
+          />
+
+          {/* Content */}
+          <div className="ml-4 flex-1">
+            <h3 className="font-semibold text-lg text-gray-800">
+              {task.title}
+            </h3>
+
+            <p className="text-gray-500 text-sm mt-1">
+              {task.description}
+            </p>
+
+            <div className="mt-3 flex gap-2 flex-wrap">
+              {/* Priority Badge */}
+              <span
+                className={`px-3 py-1 text-xs rounded-full font-medium
+                  ${
+                    task.priority === "High"
+                      ? "bg-red-100 text-red-600"
+                      : task.priority === "Medium"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-green-100 text-green-600"
+                  }`}
+              >
+                {task.priority}
+              </span>
+
+              {/* Category Badge */}
+              <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-600 font-medium">
+                {task.category}
+              </span>
+            </div>
+          </div>
+
+          {/* Menu */}
+          <div className="relative">
+            <button
+              onClick={() =>
+                setOpenMenuId(openMenuId === task.id ? null : task.id)
+              }
+              className="px-2 py-1 rounded-lg bg-white hover:bg-gray-100 transition"
+            >
+              ⋮
+            </button>
+
+            {openMenuId === task.id && (
+              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-xl shadow-lg p-2 flex flex-col gap-2 z-10">
+                <Button
+                  onClick={() => onEdit(task)}
+                  className="text-sm px-3 py-2 rounded-lg hover:bg-gray-100 text-left"
+                >
+                  Edit
+                </Button>
+
+                <Button
+                  onClick={() => onDelete(task.id)}
+                  className="text-sm px-3 py-2 rounded-lg hover:bg-red-100 text-red-600 text-left"
+                >
+                  Delete
+                </Button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Menu */}
-        <div className="relative">
-          <button
-            onClick={() =>
-              setOpenMenuId(openMenuId === task.id ? null : task.id)
-            }
-            className="px-2 py-1 rounded hover:bg-gray-100"
-          >
-            ⋮
-          </button>
-
-          {openMenuId === task.id && (
-           <div className="mt-4 flex gap-3">
-
-  <button
-    onClick={() => onEdit(task)}
-    className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-  >
-    Edit
-  </button>
-
-  <button
-    onClick={() => onDelete(task.id)}
-    className="px-4 py-2 text-sm border border-red-400 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition"
-  >
-    Delete
-  </button>
-
-</div>
-
-          )}
-        </div>
-        
-      </div>
-    ))}
-  </div>
+      ))}
+    </div>
   );
 }
