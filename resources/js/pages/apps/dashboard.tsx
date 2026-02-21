@@ -1,330 +1,330 @@
-import React, { useState } from "react";
-import { LayoutDashboard, Clock, CheckCircle, AlertTriangle } from "lucide-react";
-import { router } from "@inertiajs/react";
-import { IoIosLogOut } from "react-icons/io";
-import { Button } from "@headlessui/react";
+'use client';
+import React, { useState } from 'react';
+import { Clock, CheckCircle, AlertTriangle, LogOut, Plus, MoreVertical, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger,SelectValue, } from '@/components/ui/select';
+import { DropdownMenu,DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from '@/components/ui/dropdown-menu';
 import { MdOutlinePlaylistAddCheck } from "react-icons/md";
 import { LuSparkles } from "react-icons/lu";
-
-
+import { IoIosLogOut } from "react-icons/io";
+import { router } from '@inertiajs/react';
 
 type Task = {
   id: number;
   title: string;
   description: string;
-  priority: "Low" | "Medium" | "High";
+  priority: 'Low' | 'Medium' | 'High';
   category: string;
-  status: "To Do" | "In Progress" | "Done";
+  status: 'To Do' | 'In Progress' | 'Done';
+  completed?: boolean;
 };
 
-const tasksData: Task[] = [
+const initialTasks: Task[] = [
   {
     id: 1,
-    title: "Sample Task",
-    description: "This is a sample task",
-    priority: "Medium",
-    category: "Personal",
-    status: "To Do",
+    title: 'Design System Setup',
+    description: 'Create comprehensive design tokens and component library',
+    priority: 'High',
+    category: 'Design',
+    status: 'In Progress',
+  },
+  {
+    id: 2,
+    title: 'API Integration',
+    description: 'Integrate REST API endpoints for tasks management',
+    priority: 'High',
+    category: 'Development',
+    status: 'To Do',
+  },
+  {
+    id: 3,
+    title: 'Database Setup',
+    description: 'Configure database schema and migrations',
+    priority: 'Medium',
+    category: 'Infrastructure',
+    status: 'Done',
   },
 ];
 
 export default function Dashboard() {
-
-
-  const [tasks, setTasks] = useState<Task[]>(tasksData);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] =
-    useState<"All" | Task["status"]>("All");
-  const [filterPriority, setFilterPriority] =
-    useState<"All" | Task["priority"]>("All");
-
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'All' | Task['status']>('All');
+  const [filterPriority, setFilterPriority] = useState<'All' | Task['priority']>('All');
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-
   const [taskForm, setTaskForm] = useState({
-    title: "",
-    description: "",
-    priority: "Medium" as Task["priority"],
-    category: "Personal",
-    status: "To Do" as Task["status"],
+    title: '',
+    description: '',
+    priority: 'Medium' as Task['priority'],
+    category: 'Personal',
+    status: 'To Do' as Task['status'],
   });
 
-  function openEditModal(task: Task) {
+  const openNewTaskModal = () => {
+    setEditingTask(null);
+    setTaskForm({
+      title: '',
+      description: '',
+      priority: 'Medium',
+      category: 'Personal',
+      status: 'To Do',
+    });
+    setShowModal(true);
+  };
+
+  const openEditModal = (task: Task) => {
     setEditingTask(task);
     setTaskForm(task);
     setShowModal(true);
-  }
+  };
 
-  function deleteTask(id: number) {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      setTasks(tasks.filter((t) => t.id !== id));
+  const handleSaveTask = () => {
+    if (!taskForm.title.trim()) {
+      alert('Title is required');
+      return;
     }
-  }
 
-  function handleSaveTask() {
-  if (!taskForm.title.trim()) {
-    alert("Title is required");
-    return;
-  }
+    if (editingTask) {
+      setTasks(
+        tasks.map((t) =>
+          t.id === editingTask.id ? { ...editingTask, ...taskForm } : t
+        )
+      );
+    } else {
+      const newTask: Task = {
+        id: Date.now(),
+        ...taskForm,
+      };
+      setTasks([...tasks, newTask]);
+    }
 
-  if (editingTask) {
-    // EDIT
+    setShowModal(false);
+    setEditingTask(null);
+  };
+
+  const handleDeleteTask = (id: number) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      setTasks(tasks.filter((t) => t.id !== id));
+      deleteTaskAPI(id);
+    }
+  };
+
+  const handleToggleComplete = (id: number) => {
     setTasks(
       tasks.map((t) =>
-        t.id === editingTask.id ? { ...editingTask, ...taskForm } : t
+        t.id === id ? { ...t, completed: !t.completed } : t
       )
     );
-  } else {
-    // ADD NEW
-    const newTask: Task = {
-      id: Date.now(),
-      ...taskForm,
-    };
-
-    setTasks([...tasks, newTask]);
-  }
-
-  setShowModal(false);
-  setEditingTask(null);
-}
+    const task = tasks.find((t) => t.id === id);
+    if (task) {
+      updateTask(id, { completed: !task.completed });
+    }
+  };
 
   const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "All" || task.status === filterStatus;
-    const matchesPriority =
-      filterPriority === "All" || task.priority === filterPriority;
-
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || task.status === filterStatus;
+    const matchesPriority = filterPriority === 'All' || task.priority === filterPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
   const totalTasks = tasks.length;
-  const inProgressCount = tasks.filter(
-    (t) => t.status === "In Progress"
-  ).length;
-  const completedCount = tasks.filter((t) => t.status === "Done").length;
-  const urgentCount = tasks.filter((t) => t.priority === "High").length;
+  const inProgressCount = tasks.filter((t) => t.status === 'In Progress').length;
+  const completedCount = tasks.filter((t) => t.status === 'Done').length;
+  const urgentCount = tasks.filter((t) => t.priority === 'High').length;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-          {/* Header */}
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 rounded-lg text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 17 17">
+               <LuSparkles />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">TaskFlow</h1>
+          </div>
 
-
-      <div className="max-w-6xl mx-auto px-6">
-
-        {/* Header */}
-<header className="bg-gray-50 px-6 py-4 flex justify-between items-center shadow-sm">
-  <h1 className="text-2xl font-bold flex gap-2 items-center text-black">
-    <span className="bg-indigo-500 text-white p-2 rounded-md">
-      <LuSparkles />
-    </span>
-    TaskFlow
-  </h1>
-
-  <div className="flex items-center gap-4 text-black">
-    <p className="text-gray-600">
-      Hey, <span className="font-semibold">Feriha Ahmed</span>
-    </p>
-
-    <button
+          <div className="flex items-center gap-4">
+            <p className="text-gray-600">
+              Hey, <span className="font-semibold text-gray-900">Fariha</span>
+            </p>
+              <button
       onClick={() => router.visit("/landing")}
       className="text-gray-500 px-3 py-1 hover:text-black rounded"
       aria-label="Logout"
     >
       <IoIosLogOut className="inline-block mr-1 text-lg" />
     </button>
-  </div>
-</header>
-        {/* Greeting */}
-        <section className="mb-10 text-black">
-          <h2 className="text-3xl font-bold mb-2">
-            Good Afternoon 👋
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-6 py-10">
+        {/* Greeting Section */}
+        <section className="mb-10 animate-slide-up">
+          <h2 className="text-4xl font-bold text-gray-900 mb-2">
+            {getGreeting()} 👋
           </h2>
-          <p className="text-gray-600 mb-6 text-black">
-            Here's what's on your plate today.
-          </p>
+          <p className="text-gray-600 mb-8">Here&apos;s what&apos;s on your plate today.</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-            <StatCard title="Total Tasks" count={totalTasks} type="total" />
-            <StatCard title="In Progress" count={inProgressCount} type="progress" />
-            <StatCard title="Completed" count={completedCount} type="done" />
-            <StatCard title="Urgent" count={urgentCount} type="urgent" />
+          {/* Stat Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="animate-slide-up" style={{ animationDelay: '0ms' }}>
+              <StatCard title="Total Tasks" count={totalTasks} type="total" />
+            </div>
+            <div className="animate-slide-up" style={{ animationDelay: '100ms' }}>
+              <StatCard title="In Progress" count={inProgressCount} type="progress" />
+            </div>
+            <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <StatCard title="Completed" count={completedCount} type="done" />
+            </div>
+            <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
+              <StatCard title="Urgent" count={urgentCount} type="urgent"/>
+            </div>
           </div>
         </section>
-
+        
         {/* Search & Filters */}
-        <section className="flex flex-col sm:flex-row text-black gap-4 mb-8">
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-xl border border-gray-300"
-          />
-         {/* ---------- FIXED MODAL POSITION ---------- */}
-{showModal && (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-    <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl relative">
-
-      {/* Close Button */}
-      <button
-        onClick={() => setShowModal(false)}
-        className="absolute right-5 top-5 text-gray-400 hover:text-black text-xl"
-      >
-        ×
-      </button>
-
-      <h2 className="text-2xl font-bold mb-6 text-black">
-        {editingTask ? "Edit Task" : "New Task"}
-      </h2>
-
-      <div className="space-y-5">
-        <div>
-          <label className="text-sm font-medium text-gray-600">Title</label>
-          <input
-            type="text"
-            placeholder="What needs to be done?"
-            value={taskForm.title}
-            onChange={(e) =>
-              setTaskForm({ ...taskForm, title: e.target.value })
-            }
-            className="w-full mt-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-gray-600">Description</label>
-          <textarea
-            placeholder="Add details..."
-            value={taskForm.description}
-            onChange={(e) =>
-              setTaskForm({ ...taskForm, description: e.target.value })
-            }
-            className="w-full mt-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-gray-600">Priority</label>
-            <select
-              value={taskForm.priority}
-              onChange={(e) =>
-                setTaskForm({
-                  ...taskForm,
-                  priority: e.target.value as Task["priority"],
-                })
-              }
-              className="w-full mt-1 border rounded-xl px-4 py-3"
-            >
-              <option>Low</option>
-              <option>Medium</option>
-              <option>High</option>
-            </select>
+        <section className="flex flex-col sm:flex-row gap-4 mb-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 bg-white text-gray-900 placeholder-gray-500 w-full"
+              style={{
+                boxShadow: '0 2px 8px -1px rgba(236, 72, 153, 0.08)'
+              }}
+            />
           </div>
 
-          <div>
-            <label className="text-sm text-gray-600">Status</label>
-            <select
-              value={taskForm.status}
-              onChange={(e) =>
-                setTaskForm({
-                  ...taskForm,
-                  status: e.target.value as Task["status"],
-                })
-              }
-              className="w-full mt-1 border rounded-xl px-4 py-3"
-            >
-              <option>To Do</option>
-              <option>In Progress</option>
-              <option>Done</option>
-            </select>
-          </div>
-        </div>
+          <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as any)}>
+            <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">All Status</SelectItem>
+              <SelectItem value="To Do" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">To Do</SelectItem>
+              <SelectItem value="In Progress" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">In Progress</SelectItem>
+              <SelectItem value="Done" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">Done</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <div className="flex justify-end gap-4 pt-4">
-          <button
-            onClick={() => setShowModal(false)}
-            className="px-6 py-2 rounded-xl bg-gray-200 hover:bg-gray-300"
+          <Select value={filterPriority} onValueChange={(value) => setFilterPriority(value as any)}>
+            <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectValue placeholder="All Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">All Priority</SelectItem>
+              <SelectItem value="Low" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">Low</SelectItem>
+              <SelectItem value="Medium" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">Medium</SelectItem>
+              <SelectItem value="High" className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">High</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            onClick={openNewTaskModal}
+            className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white gap-2 w-full sm:w-auto font-medium shadow-lg hover:shadow-xl transition-all duration-200 animate-bounce-subtle"
           >
-            Cancel
-          </button>
-
-          <button
-            onClick={handleSaveTask}
-            className="px-6 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md hover:opacity-90"
-          >
-            {editingTask ? "Update Task" : "Create Task"}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-
-          <select
-  value={filterStatus}
-  onChange={(e) =>
-    setFilterStatus(e.target.value as any)
-  }
-  className="px-4 py-3 rounded-xl border border-gray-300"
->
-  <option value="All">All Categories</option>
-  <option value="To Do">To Do</option>
-  <option value="In Progress">In Progress</option>
-  <option value="Done">Done</option>
-</select>
-
-
-          <select
-            value={filterPriority}
-            onChange={(e) =>
-              setFilterPriority(e.target.value as any)
-            }
-            className="px-4 py-3 rounded-xl border border-gray-300"
-          >
-            <option value="All">All Priority</option>
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-          </select>
-
-          <button
-            onClick={() => {
-              setEditingTask(null);
-              setTaskForm({
-                title: "",
-                description: "",
-                priority: "Medium",
-                category: "Personal",
-                status: "To Do",
-              });
-              setShowModal(true);
-            }}
-            className="px-6 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
-          >
-            + New Task
-          </button>
+            <Plus className="w-5 h-5" />
+            New Task
+          </Button>
         </section>
+                   {/* Tab Navigation */}
+        {tasks.length > 0 && (
+          <div className="flex gap-8 mt-10 border-t border-gray-200 pt-6 overflow-x-auto animate-slide-up" style={{ animationDelay: '200ms' }}>
+            <button 
+              onClick={() => setFilterStatus('All')}
+              className={`font-semibold pb-3 border-b-2 transition-all duration-300 whitespace-nowrap rounded-t-lg px-2 ${
+                filterStatus === 'All'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-600 border-transparent hover:text-gray-900 hover:shadow-md'
+              }`}
+              style={filterStatus !== 'All' ? { boxShadow: '0 4px 12px -2px rgba(236, 72, 153, 0.15)' } : {}}
+            >
+              All ({tasks.length})
+            </button>
+            <button 
+              onClick={() => setFilterStatus('To Do')}
+              className={`font-semibold pb-3 border-b-2 transition-all duration-300 whitespace-nowrap rounded-t-lg px-2 ${
+                filterStatus === 'To Do'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-600 border-transparent hover:text-gray-900 hover:shadow-md'
+              }`}
+              style={filterStatus !== 'To Do' ? { boxShadow: '0 4px 12px -2px rgba(236, 72, 153, 0.15)' } : {}}
+            >
+              To Do ({tasks.filter((t) => t.status === 'To Do').length})
+            </button>
+            <button 
+              onClick={() => setFilterStatus('In Progress')}
+              className={`font-semibold pb-3 border-b-2 transition-all duration-300 whitespace-nowrap rounded-t-lg px-2 ${
+                filterStatus === 'In Progress'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-600 border-transparent hover:text-gray-900 hover:shadow-md'
+              }`}
+              style={filterStatus !== 'In Progress' ? { boxShadow: '0 4px 12px -2px rgba(236, 72, 153, 0.15)' } : {}}
+            >
+              In Progress ({tasks.filter((t) => t.status === 'In Progress').length})
+            </button>
+            <button 
+              onClick={() => setFilterStatus('Done')}
+              className={`font-semibold pb-3 border-b-2 transition-all duration-300 whitespace-nowrap rounded-t-lg px-2 ${
+                filterStatus === 'Done'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-600 border-transparent hover:text-gray-900 hover:shadow-md'
+              }`}
+              style={filterStatus !== 'Done' ? { boxShadow: '0 4px 12px -2px rgba(236, 72, 153, 0.15)' } : {}}
+            >
+              Done ({tasks.filter((t) => t.status === 'Done').length})
+            </button>
+          </div>
+        )} <br/>
+        {/* Tasks List or Empty State */}
+        {filteredTasks.length === 0 ? (
+          <EmptyState onCreateTask={openNewTaskModal} />
+        ) : (
+          <TaskList 
+            tasks={filteredTasks} 
+            onEdit={openEditModal} 
+            onDelete={handleDeleteTask}
+            onToggleComplete={handleToggleComplete}
+          />
+        )}
 
-        {/* Task List */}
-       <TaskList
-  tasks={filteredTasks}
-  onEdit={openEditModal}
-  onDelete={deleteTask}
-  
-/>
+ 
+      </main>
 
-      </div>
+      {/* Modal */}
+      {showModal && (
+        <TaskModal
+          isOpen={showModal}
+          isEditing={!!editingTask}
+          taskForm={taskForm}
+          onTaskFormChange={setTaskForm}
+          onSave={handleSaveTask}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 }
 
-/* ---------------- STAT CARD ---------------- */
-
+/* Stat Card Component */
 function StatCard({
   title,
   count,
@@ -332,147 +332,281 @@ function StatCard({
 }: {
   title: string;
   count: number;
-  type: "total" | "progress" | "done" | "urgent";
+  type: 'total' | 'progress' | 'done' | 'urgent';
 }) {
-
   const styles = {
-    total: "bg-indigo-600 text-white",
-    progress: "bg-cyan-600 text-white",
-    done: "bg-purple-600 text-white",
-    urgent: "bg-orange-600 text-white",
+    total: { bg: 'bg-blue-500', icon: 'text-blue-600', gradient: 'from-blue-500' },
+    progress: { bg: 'bg-cyan-500', icon: 'text-cyan-600', gradient: 'from-cyan-500' },
+    done: { bg: 'bg-purple-500', icon: 'text-purple-600', gradient: 'from-purple-500' },
+    urgent: { bg: 'bg-orange-500', icon: 'text-orange-600', gradient: 'from-orange-500' },
   };
 
- const icons = {
+const icons = {
   total: <MdOutlinePlaylistAddCheck size={22} />,
   progress: <Clock size={22} />,
   done: <CheckCircle size={22} />,
   urgent: <AlertTriangle size={22} />,
 };
+  const config = styles[type];
 
   return (
-    <div className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition overflow-hidden">
-  
-  {/* Gradient right top */}
-  <div className={`absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-20 ${
-    type === "total"
-      ? "bg-indigo-400"
-      : type === "progress"
-      ? "bg-cyan-400"
-      : type === "done"
-      ? "bg-purple-400"
-      : "bg-orange-400"
-  }`} />
-      <div
-        className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${styles[type]}`}
-      >
+    <div 
+      className="relative overflow-hidden bg-white rounded-2xl p-6 border border-gray-100 hover:border-pink-200 transition-all duration-300 hover:animate-glow-pink cursor-pointer group"
+      style={{
+        boxShadow: '0 6px 6px -1px rgba(236, 72, 153, 0.08), 0 4px 4px -1px rgba(236, 72, 153, 0.04)'
+      }}
+    >
+      <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-10 bg-gradient-to-br ${config.gradient} to-transparent`} />
+      <div className={`${config.bg} w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-2xl`}>
         {icons[type]}
       </div>
-
-      <p className="text-3xl font-bold text-gray-800">{count}</p>
-      <p className="text-gray-500 text-sm mt-1">{title}</p>
+      <p className="text-4xl font-bold text-gray-900">{count}</p>
+      <p className="text-gray-600 text-sm mt-1">{title}</p>
     </div>
   );
 }
 
+/* Empty State Component */
+function EmptyState({ onCreateTask }: { onCreateTask: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-4 animate-slide-up">
+      <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 animate-bounce-subtle">
+        <Plus className="w-8 h-8 text-blue-600" />
+      </div>
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">No tasks found</h3>
+      <p className="text-gray-600 mb-6 text-center max-w-sm">
+        Create one to get started! Build your task list and stay organized.
+      </p>
+      <Button onClick={onCreateTask} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 animate-bounce-subtle">
+        <Plus className="w-5 h-5" />
+        Create First Task
+      </Button>
+    </div>
+  );
+}
 
-/* ---------------- TASK LIST ---------------- */
-
+/* Task List Component */
 function TaskList({
   tasks,
   onEdit,
   onDelete,
+  onToggleComplete,
 }: {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
+  onToggleComplete: (id: number) => void;
 }) {
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-
-  if (tasks.length === 0) {
-    return <p className="text-gray-500">No tasks found.</p>;
-  }
-
   return (
-    <div className="space-y-5">
-      {tasks.map((task) => (
+    <div className="space-y-4">
+      {tasks.map((task, index) => (
         <div
           key={task.id}
-          className="relative bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-start hover:shadow-md transition-all duration-200"
+          className="relative group bg-white rounded-2xl p-6 border border-gray-100 hover:border-pink-200 transition-all duration-300 animate-fade-in"
+          style={{
+            animationDelay: `${index * 50}ms`,
+            boxShadow: task.completed 
+              ? '0 10px 25px -5px rgba(236, 72, 153, 0.15)' 
+              : '0 4px 6px -1px rgba(236, 72, 153, 0.08)',
+          }}
         >
-          {/* Status Color Bar */}
-          <div
-            className={`absolute left-0 top-0 h-full w-1.5 rounded-l-3xl ${
-              task.status === "Done"
-                ? "bg-purple-500"
-                : task.status === "In Progress"
-                ? "bg-cyan-500"
-                : "bg-indigo-500"
-            }`}
-          />
-
-          {/* Content */}
-          <div className="ml-4 flex-1">
-            <h3 className="font-semibold text-lg text-gray-800">
-              {task.title}
-            </h3>
-
-            <p className="text-gray-500 text-sm mt-1">
-              {task.description}
-            </p>
-
-            <div className="mt-3 flex gap-2 flex-wrap">
-              {/* Priority Badge */}
-              <span
-                className={`px-3 py-1 text-xs rounded-full font-medium
-                  ${
-                    task.priority === "High"
-                      ? "bg-red-100 text-red-600"
-                      : task.priority === "Medium"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-600"
-                  }`}
-              >
-                {task.priority}
-              </span>
-
-              {/* Category Badge */}
-              <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-600 font-medium">
-                {task.category}
-              </span>
-            </div>
-          </div>
-
-          {/* Menu */}
-          <div className="relative">
+          <div className="ml-4 flex justify-between items-start gap-4">
+            {/* Checkbox */}
             <button
-              onClick={() =>
-                setOpenMenuId(openMenuId === task.id ? null : task.id)
-              }
-              className="px-2 py-1 rounded-lg bg-white hover:bg-gray-100 transition"
+              onClick={() => onToggleComplete(task.id)}
+              className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 mt-1 ${
+                task.completed
+                  ? 'bg-gradient-to-br from-pink-500 to-pink-600 border-pink-600 shadow-lg shadow-pink-200'
+                  : 'border-gray-300 hover:border-pink-400 hover:shadow-md hover:shadow-pink-100'
+              }`}
             >
-              ⋮
+              {task.completed && (
+                <svg className="w-4 h-4 text-white animate-scale-in" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
             </button>
 
-            {openMenuId === task.id && (
-              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-xl shadow-lg p-2 flex flex-col gap-2 z-10">
-                <Button
-                  onClick={() => onEdit(task)}
-                  className="text-sm px-3 py-2 rounded-lg hover:bg-gray-100 text-left"
-                >
-                  Edit
-                </Button>
+            <div className="flex-1">
+              <h3 className={`font-semibold text-lg transition-all duration-300 ${
+                task.completed
+                  ? 'text-gray-400 line-through'
+                  : 'text-gray-900'
+              }`}>
+                {task.title}
+              </h3>
+              <p className={`text-sm mt-1 transition-all duration-300 ${
+                task.completed ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                {task.description}
+              </p>
 
-                <Button
-                  onClick={() => onDelete(task.id)}
-                  className="text-sm px-3 py-2 rounded-lg hover:bg-red-100 text-red-600 text-left"
+              <div className="flex gap-2 flex-wrap mt-4">
+                {/* Priority Badge */}
+                <span
+                  className={`px-3 py-1 text-xs rounded-full font-medium transition-all duration-300 ${
+                    task.priority === 'High'
+                      ? 'bg-red-100 text-red-700'
+                      : task.priority === 'Medium'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-green-100 text-green-700'
+                  }`}
                 >
-                  Delete
-                </Button>
+                  {task.priority}
+                </span>
+
+                {/* Category Badge */}
+                <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
+                  {task.category}
+                </span>
               </div>
-            )}
+            </div>
+
+           {/* Actions Menu */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <button
+      className="p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-gray-100 flex-shrink-0">
+      <MoreVertical className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+    </button>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent align="end" className="rounded-xl">
+    <DropdownMenuItem
+      onClick={() => onEdit(task)} className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white">
+      Edit
+    </DropdownMenuItem>
+    <DropdownMenuItem
+      onClick={() => onDelete(task.id)} className="rounded-lg hover:bg-pink-100 hover:text-pink-600 focus:bg-pink-600 focus:text-white" >
+      Delete
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
           </div>
         </div>
       ))}
     </div>
   );
 }
+
+/* Task Modal Component */
+function TaskModal({
+  isOpen,
+  isEditing,
+  taskForm,
+  onTaskFormChange,
+  onSave,
+  onCancel,
+}: {
+  isOpen: boolean;
+  isEditing: boolean;
+  taskForm: any;
+  onTaskFormChange: (form: any) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-xl">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {isEditing ? 'Edit Task' : 'Create New Task'}
+        </h2>
+
+        <div className="space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+            <Input
+              type="text"
+              placeholder="What needs to be done?"
+              value={taskForm.title}
+              onChange={(e) => onTaskFormChange({ ...taskForm, title: e.target.value })}
+              className="w-full"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              placeholder="Add details about this task..."
+              value={taskForm.description}
+              onChange={(e) => onTaskFormChange({ ...taskForm, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              rows={4}
+            />
+          </div>
+
+          {/* Priority & Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <Select
+                value={taskForm.priority}
+                onValueChange={(value) => onTaskFormChange({ ...taskForm, priority: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <Select
+                value={taskForm.status}
+                onValueChange={(value) => onTaskFormChange({ ...taskForm, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="To Do">To Do</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <Input
+              type="text"
+              placeholder="e.g., Personal, Work, Design..."
+              value={taskForm.category}
+              onChange={(e) => onTaskFormChange({ ...taskForm, category: e.target.value })}
+              className="w-full"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button onClick={onSave} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {isEditing ? 'Update Task' : 'Create Task'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function updateTask(id: number, arg1: { completed: boolean; }) {
+  throw new Error('Function not implemented.');
+}
+function deleteTaskAPI(id: number) {
+  throw new Error('Function not implemented.');
+}
+
